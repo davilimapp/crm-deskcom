@@ -82,6 +82,17 @@ export const DICIONARIO: Traducoes = {
   "Enviando resposta aprovada…": { es: "Enviando respuesta aprobada…" },
   "Resposta aprovada enviada": { es: "Respuesta aprobada enviada" },
   "Sugestão rejeitada": { es: "Sugerencia rechazada" },
+  "Nenhum agente publicado atende este canal. Publique uma versão do agente em IA › Agentes.": {
+    es: "Ningún agente publicado atiende este canal. Publica una versión del agente en IA › Agentes.",
+  },
+  "Não dá para sugerir nesta conversa: o contato pediu para não receber mensagens, foi anonimizado, ou o histórico não pôde ser lido.":
+    {
+      es: "No se puede sugerir en esta conversación: el contacto pidió no recibir mensajes, fue anonimizado, o no se pudo leer el historial.",
+    },
+  "Não foi possível gerar a sugestão. O motivo ficou registrado no servidor com o identificador abaixo.":
+    {
+      es: "No se pudo generar la sugerencia. El motivo quedó registrado en el servidor con el identificador de abajo.",
+    },
   "Sugestão obsoleta: a conversa mudou": { es: "Sugerencia obsoleta: la conversación cambió" },
   "Não foi possível concluir a sugestão ou o envio": {
     es: "No se pudo completar la sugerencia o el envío",
@@ -3853,6 +3864,35 @@ export const DICIONARIO: Traducoes = {
     es: "No pude iniciar la actualización. Intenta de nuevo en instantes.",
   },
   "Atualizando para a versão": { es: "Actualizando a la versión" },
+  // ── A espera antes de o servidor pegar o pedido, e o fim reconhecido na hora.
+  //    Os dois estados que a tela ganhou quando parou de fingir que a conversa
+  //    com o host é instantânea (ver o cabeçalho do `UpdatePanel`).
+  "Pedido enviado — esperando o servidor pegar": {
+    es: "Pedido enviado — esperando que el servidor lo tome",
+  },
+  "Anotei o pedido de atualizar para a versão": {
+    es: "Anoté el pedido de actualizar a la versión",
+  },
+  "O servidor confere se há algo a fazer de poucos em poucos minutos, então a atualização pode levar até cerca de cinco minutos para começar.": {
+    es: "El servidor revisa si hay algo que hacer cada pocos minutos, así que la actualización puede tardar hasta unos cinco minutos en empezar.",
+  },
+  "Esta tela ficar parada nesse tempo é normal": {
+    es: "Que esta pantalla quede quieta durante ese tiempo es normal",
+  },
+  " — ela se mexe sozinha assim que o servidor começar.": {
+    es: " — se mueve sola en cuanto el servidor empiece.",
+  },
+  "Esperando há": { es: "Esperando hace" },
+  "Pode fechar esta página: o pedido já está registrado e não se perde.": {
+    es: "Puedes cerrar esta página: el pedido ya está registrado y no se pierde.",
+  },
+  "Pronto — você está na versão": { es: "Listo — estás en la versión" },
+  "A atualização terminou e o sistema já está no ar na versão": {
+    es: "La actualización terminó y el sistema ya está en línea en la versión",
+  },
+  "O servidor confirma isso na próxima vez que falar comigo, daqui a alguns minutos — até lá, esta tela já sabe.": {
+    es: "El servidor lo confirma la próxima vez que hable conmigo, en unos minutos — hasta entonces, esta pantalla ya lo sabe.",
+  },
   "O sistema sai do ar por alguns instantes e volta sozinho. Pode deixar esta página aberta.": {
     es: "El sistema se apaga por unos instantes y vuelve solo. Puedes dejar esta página abierta.",
   },
@@ -4088,6 +4128,13 @@ export const DICIONARIO: Traducoes = {
   "Desligada. Ninguém consegue ligar nem receber chamadas por aqui.": {
     es: "Desactivada. Nadie puede llamar ni recibir llamadas por aquí.",
   },
+  "A chamada de voz está desligada nesta empresa.": {
+    es: "La llamada de voz está desactivada en esta empresa.",
+  },
+  "Conectar o aparelho exige ligá-la antes, em Configurações › Segurança — é lá que está o aviso sobre o risco de o WhatsApp bloquear a conta, e quem liga precisa ter lido.":
+    {
+      es: "Conectar el dispositivo exige activarla antes, en Configuración › Seguridad — allí está el aviso sobre el riesgo de que WhatsApp bloquee la cuenta, y quien la activa tiene que haberlo leído.",
+    },
   "Leia antes de ligar": { es: "Lee antes de activar" },
   "Para fazer chamadas, o sistema precisa conectar um segundo aparelho ao mesmo número de WhatsApp que você já usa para atender. Essa conexão não é feita pelo caminho oficial do WhatsApp.":
     {
@@ -6010,6 +6057,7 @@ export const DICIONARIO: Traducoes = {
   //  de compilação, e é assim que o dicionário evita duas traduções da mesma
   //  frase divergirem.)
   "Devolver acesso": { es: "Devolver el acceso" },
+  "Acesso devolvido.": { es: "Acceso devuelto." },
   // ("Seu nome" já existe mais acima — a chave é o próprio texto.)
   "Informe seu nome": { es: "Escribe tu nombre" },
   "Você já tem uma conta com este e-mail": {
@@ -8322,6 +8370,30 @@ export const DICIONARIO: Traducoes = {
   "Este ponto usa o modelo definido na versão publicada do agente; a escolha do painel não se aplica.": {
     es: "Este punto usa el modelo definido en la versión publicada del agente; la elección del panel no se aplica.",
   },
+
+  // ─── app/app/team/_components/TeamInvitesClient.tsx (lista de convites) ───
+  "Convites": { es: "Invitaciones" },
+  "Convites enviados e seu status. Um convite aceito vira membro na lista acima.": {
+    es: "Invitaciones enviadas y su estado. Una invitación aceptada se vuelve miembro en la lista de arriba.",
+  },
+  "Nenhum convite enviado.": { es: "Ninguna invitación enviada." },
+  "Erro ao carregar convites.": { es: "Error al cargar las invitaciones." },
+  "E-mail enviado": { es: "Correo enviado" },
+  "Enviado em": { es: "Enviado el" },
+  "Convidado por": { es: "Invitado por" },
+  "Expirado": { es: "Expirada" },
+  "Não saiu": { es: "No salió" },
+  "reenviado": { es: "reenviado" },
+  "Revogar convite": { es: "Revocar invitación" },
+  "não poderá mais usar este convite para entrar. Você pode enviar um novo depois.": {
+    es: "ya no podrá usar esta invitación para entrar. Puedes enviar una nueva después.",
+  },
+  "Link do convite copiado.": { es: "Enlace de la invitación copiado." },
+  "Não foi possível copiar. Copie da barra do navegador.": {
+    es: "No se pudo copiar. Cópialo desde la barra del navegador.",
+  },
+  "Convite reenviado.": { es: "Invitación reenviada." },
+  "Convite revogado.": { es: "Invitación revocada." },
 };
 
 /**
