@@ -70,14 +70,52 @@ export default async function PublicLayout({ children }: { children: React.React
                 que o logo da EMPRESA não vaza para cá. Sem ele a spec caía na
                 "primeira <img> da página", e uma asserção de negação com seletor
                 largo passa sozinha assim que outra imagem entra na tela.
+
+                ── Variante por tema (claro/escuro) ──────────────────────────────────
+
+                Quando a URL do logo segue a convenção `-black`/`-white` (a marca
+                Zenfy nesta instalação), renderizamos DOIS `<img>`: o claro visível
+                no tema claro e o escuro no tema escuro, alternados por `dark:`.
+                Só o claro carrega o `data-testid="logo-da-fachada"` — o escuro é
+                companheiro visual, não alvo de asserção. Para URLs que NÃO seguem
+                a convenção (logos subidos pela tela, uploads da spec e2e), segue um
+                só `<img>` como antes: a regra de três derivada da de uma.
               */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                data-testid="logo-da-fachada"
-                src={marca.logoUrl}
-                alt={marca.nome}
-                className="h-10 w-auto max-w-[12rem] object-contain"
-              />
+              {(() => {
+                const claro = marca.logoUrl as string;
+                const escuro = claro.includes("-black")
+                  ? claro.replace("-black", "-white")
+                  : null;
+                if (!escuro) {
+                  return (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      data-testid="logo-da-fachada"
+                      src={claro}
+                      alt={marca.nome}
+                      className="h-10 w-auto max-w-[12rem] object-contain"
+                    />
+                  );
+                }
+                return (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      data-testid="logo-da-fachada"
+                      src={claro}
+                      alt={marca.nome}
+                      className="h-10 w-auto max-w-[12rem] object-contain dark:hidden"
+                    />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      data-testid="logo-da-fachada-dark"
+                      src={escuro}
+                      alt={marca.nome}
+                      className="hidden h-10 w-auto max-w-[12rem] object-contain dark:block"
+                    />
+                  </>
+                );
+              })()}
             </div>
           ) : marcaEhADoProduto({ name: marca.nome, logoUrl: null }) ? (
             <div className="flex justify-center">

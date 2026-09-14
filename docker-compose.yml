@@ -25,8 +25,9 @@ services:
     ports:
       - "3030:3000"
     environment:
-      # Hash SHA512 hex da api key (NÃO plaintext). Cliente envia plaintext em X-Api-Key.
-      WAHA_API_KEY: ${WAHA_API_KEY_SHA512}
+      # Plaintext da API key — o container WAHA compara diretamente com o
+      # valor recebido no header X-Api-Key. O app envia WAHA_API_KEY (plaintext).
+      WAHA_API_KEY: ${WAHA_API_KEY}
       # Webhook base URL — precisa ser pública (use ngrok/cloudflared em dev).
       # host.docker.internal: o app Next roda no HOST em dev — localhost dentro do
       # container seria o próprio WAHA e o webhook nunca chegaria. Porta 3002:

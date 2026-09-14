@@ -51,7 +51,7 @@
 ## Ordem recomendada
 
 Se você quer rodar o app o mais rápido possível com o mínimo viável:
-
+## Feito
 **🟢 Mínimo pra `pnpm dev` subir sem erro fatal (~15 min):**
 1. [Supabase](#1-supabase--banco--auth--storage) — sem isso nada funciona (auth + DB).
 2. [Chaves geradas localmente](#9-chaves-geradas-localmente--encryption--secrets) — `INTERNAL_SECRET`, encryption keys.

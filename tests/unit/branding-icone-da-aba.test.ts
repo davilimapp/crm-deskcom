@@ -74,16 +74,17 @@ describe("o ícone carrega para quem NÃO entrou", () => {
     expect(PUBLIC_PATHS.some((re) => re.source === String.raw`^\/icon$`)).toBe(true);
   });
 
-  it("o ícone é gerado em runtime, nunca congelado no build", () => {
-    // Sem `force-dynamic` o `next build` resolve o ícone UMA vez e a marca de
-    // quem buildou vai dentro da imagem — que é uma só para todos os clones.
-    // O defeito é invisível em dev, em teste e na Vercel: só aparece na VPS do
+  it("o ícone é lido em runtime, nunca congelado no build", () => {
+    // Sem `force-dynamic` o `next build` resolve o ícone UMA vez e o conteúdo de
+    // quem buildou vai dentro da imagem — que é uma só para todos os clones. O
+    // defeito é invisível em dev, em teste e na Vercel: só aparece na VPS do
     // revendedor. Por isso a asserção é sobre o TEXTO: é uma linha que some num
-    // refactor sem nada mais quebrar.
+    // refactor sem nada mais quebrar. O ícone hoje serve `public/logo-redonda.png`
+    // como PNG estático (ver `app/icon.tsx`); a leitura acontece em runtime no
+    // `public/` da instalação que está rodando.
     const icone = fs.readFileSync(path.join(RAIZ, "app/icon.tsx"), "utf8");
     expect(icone).toMatch(/export const dynamic\s*=\s*"force-dynamic"/);
-    // E a marca tem de vir do resolvedor, não de literal.
-    expect(icone).toMatch(/marcaDaSaida\(null\)/);
+    expect(icone).toMatch(/public[\\/]+logo-redonda\.png/);
   });
 
   it("o layout declara o ícone — é o que mata o pedido a /favicon.ico", () => {

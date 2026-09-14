@@ -139,17 +139,20 @@ export function SidebarContent({
           ) : (
             <LogotipoDoProduto nome={nome} className="h-8 w-auto" />
           )
+        ) : collapsed ? (
+          // Recolhido sem marca do produto: o logo minimalista da instalação
+          // (quando existe arquivo em public/), senão a inicial do nome.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src="/logo-minimalista.png"
+            alt={nome}
+            className="h-8 w-8 object-contain"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
         ) : (
-          <span className={cn("font-semibold tracking-tight", collapsed && "sr-only")}>{nome}</span>
-        )}
-        {collapsed && !marcaDoProduto && (
-          <span aria-hidden className="text-lg font-bold text-primary">
-            {/* Spread e não `[0]`: nome começando com emoji ou acento composto
-                quebraria no meio do code point. Mesma regra de `resolveBranding`
-                — a inicial precisa acompanhar o nome que a barra mostra, senão
-                recolher o menu troca a marca. */}
-            {[...nome][0]?.toUpperCase() ?? brand.initial}
-          </span>
+          <span className={cn("font-semibold tracking-tight")}>{nome}</span>
         )}
       </div>
       {/*

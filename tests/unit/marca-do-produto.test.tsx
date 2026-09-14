@@ -138,9 +138,14 @@ describe("as cores do desenho", () => {
 describe("o favicon segue a mesma regra", () => {
   const icone = fs.readFileSync(path.join(process.cwd(), "app/icon.tsx"), "utf8");
 
-  it("desenha o símbolo quando a marca é a do produto, e a inicial quando não é", () => {
-    expect(icone).toMatch(/marcaEhADoProduto\(\{ name: marca\.nome, logoUrl: marca\.logoUrl \}\)/);
-    expect(icone).toMatch(/<path d=\{SIMBOLO\.d\}/);
-    expect(icone).toMatch(/letraDoIcone\(marca\.nome\)/);
+  it("serve o logo redondo estático em public/ como ícone da aba", () => {
+    // Até a onda do logo redondo próprio, `app/icon.tsx` desenhava o símbolo do
+    // produto (ou a inicial da marca) em runtime com `@vercel/og`. A marca desta
+    // instalação passou a ter um arquivo próprio (`public/logo-redonda.png`), e o
+    // ícone da aba passou a lê-lo direto — não a derivar de cor + inicial. Este
+    // teste guarda a leitura do arquivo: o dia em que alguém voltar a colar um
+    // `ImageResponse` com a inicial, a aba de quem tem logo próprio fica sem ele.
+    expect(icone).toMatch(/public[\\/]+logo-redonda\.png/);
+    expect(icone).toMatch(/export const dynamic\s*=\s*"force-dynamic"/);
   });
 });
