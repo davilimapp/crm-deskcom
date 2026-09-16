@@ -27,6 +27,12 @@ const heartbeat = z.object({
   kind: z.literal("heartbeat"),
   current_version: z.string().max(64),
   current_sha: z.string().max(64),
+  // Assunto do commit instalado (o que o rodapé compõe com o SHA fora de
+  // release). Opcional com default pelo mesmo motivo dos dois abaixo: agente
+  // antigo que ainda não envia não pode passar a levar 422 — o heartbeat
+  // inteiro morreria e a instalação ficaria muda. O agente corta em 120 bytes
+  // crus antes de escapar; o teto aqui cobre o pior caso escapado.
+  current_subject: z.string().max(256).optional().default(""),
   off_release: z.boolean(),
   latest_version: z.string().max(64),
   // "não consegui comparar" ≠ "não há nada novo". Opcional com default: o
@@ -93,6 +99,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       .update({
         current_version: payload.current_version,
         current_sha: payload.current_sha,
+        current_subject: payload.current_subject,
         off_release: payload.off_release,
         latest_version: payload.latest_version,
         compare_failed: payload.compare_failed,

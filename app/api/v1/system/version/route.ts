@@ -35,7 +35,7 @@ export async function GET(_req: NextRequest): Promise<Response> {
   const { data: version, error: versionError } = await db
     .from("system_version")
     .select(
-      "current_version, latest_version, off_release, compare_failed, has_known_release, changelog_raw, agent_last_seen_at, updated_at",
+      "current_version, current_subject, latest_version, off_release, compare_failed, has_known_release, changelog_raw, agent_last_seen_at, updated_at",
     )
     .eq("id", 1)
     .maybeSingle();
@@ -109,8 +109,23 @@ export async function GET(_req: NextRequest): Promise<Response> {
         ? run.to_version
         : current;
 
+  // O assunto do commit só nomeia o que o rodapé mostra quando a versão em pé
+  // é a do último heartbeat. Na janela pós-rollback, `current` ainda nomeia o
+  // commit que QUEBROU (o checkout deu certo; quem não subiu foi o container):
+  // devolver o assunto dele ao lado de `run.from_version` seria creditar à
+  // versão que voltou ao ar o nome da que caiu.
+  const subject = running === current ? (version?.current_subject ?? "") : "";
+
   if (!user.is_platform_admin) {
-    return ok({ current_version: running, is_owner: false });
+    return ok({
+      current_version: running,
+      current_subject: subject,
+      // O rodapé compõe "assunto - versão" só fora de release; em tag, o
+      // número é o nome e o assunto de um commit de release é ruído. Sem este
+      // booleano aqui, quem não é dono não teria como decidir.
+      off_release: version?.off_release ?? false,
+      is_owner: false,
+    });
   }
 
   const latest = version?.latest_version ?? "";
@@ -126,6 +141,7 @@ export async function GET(_req: NextRequest): Promise<Response> {
 
   return ok({
     current_version: running,
+    current_subject: subject,
     is_owner: true,
     latest_version: latest,
     update_available: Boolean(latest) && latest !== running,

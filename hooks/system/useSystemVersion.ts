@@ -5,6 +5,12 @@ import { apiClient } from "@/lib/api/client";
 
 export interface SystemVersion {
   current_version: string;
+  /**
+   * Assunto do commit instalado, quando a versão em pé é a do último heartbeat
+   * (vazio na janela pós-rollback). O rodapé compõe "assunto - versão" só
+   * fora de release; em tag, o número é o nome.
+   */
+  current_subject?: string;
   is_owner: boolean;
   latest_version?: string;
   update_available?: boolean;

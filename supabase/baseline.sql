@@ -26118,3 +26118,14 @@ drop trigger if exists trg_platform_meta_app_updated_at on public.platform_meta_
 create trigger trg_platform_meta_app_updated_at
   before update on public.platform_meta_app
   for each row execute function public.fn_set_updated_at();
+
+-- ---- o rodapé nomeia o commit instalado, não só o SHA (migration 0263) ----
+--
+-- Numa instalação fora de release, `current_version` é um SHA curto, que não
+-- diz a uma pessoa o que está rodando. `current_subject` guarda o assunto do
+-- commit instalado, enviado pelo agente do host no heartbeat. Aditivo e
+-- idempotente: agente antigo grava '' (o default) e a tela segue como antes.
+alter table public.system_version
+  add column if not exists current_subject text not null default '';
+comment on column public.system_version.current_subject is
+  'Assunto do commit instalado (%s de git log -1), enviado pelo agente do host no heartbeat. Vazio para agente antigo que ainda não envia o campo; a tela mostra o que current_version já mostrava.';

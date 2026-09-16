@@ -1,5 +1,17 @@
 # A moldura do logo no tema escuro — prova em tela do PR #659
 
+> **⚠️ Reversão (2026-09-16):** a moldura clara foi REMOVIDA. O pior caso que o #659
+> declarou aceitar ("moldura branca de sobra") virou o defeito real: arte desenhada
+> PARA fundo escuro — o logo claro da Zenfy — ganhava um retângulo branco em volta em
+> toda superfície do tema escuro (`/login`, `/login/forgot`, `/signup` e a barra lateral
+> de `/app`). A decisão agora é o inverso: nenhuma superfície pinta fundo atrás do logo,
+> em tema nenhum; o contraste da arte enviada é responsabilidade de quem a envia. As
+> imagens e JSON desta pasta seguem como lastro HISTÓRICO do estado com moldura — o que
+> eles provam abaixo descreve o #659, não o estado atual. A cerca do estado atual é
+> `tests/unit/logo-sem-moldura-branca.test.ts` (fonte) e a spec
+> `tests/e2e/logo-moldura-no-tema-escuro.spec.ts` (tela), que agora mede a AUSÊNCIA de
+> fundo pintado nas três superfícies.
+
 As imagens e medições desta pasta são o lastro da afirmação feita no PR **#832** (lote 3 da
 triagem de 14/set): a moldura clara atrás do logo enviado **resolve o logo que some no tema escuro,
 e não mexe em nada de quem não enviou logo** — a condição literal com que o dono do produto aprovou

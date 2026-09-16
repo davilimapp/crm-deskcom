@@ -110,6 +110,19 @@ CURRENT_TAG="$(git describe --tags --exact-match HEAD 2>/dev/null || true)"
 CURRENT_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo '?')"
 LATEST_TAG="$(git tag -l 'v*' --sort=-v:refname | head -1)" || true
 
+# Assunto do commit instalado — o nome que uma pessoa lê. Fora de release,
+# `current_version` é um SHA curto ("bc962e3f"), que não diz o que está rodando;
+# o rodapé da barra lateral compõe "assunto - SHA" com ele. Cortado em 120 bytes
+# CRUS com a mesma higiene do changelog abaixo: o teto do Zod lá no app vale
+# sobre a string JÁ ESCAPADA (aspas e barra dobram de tamanho no esc()), e um
+# `head -c` em byte fixo pode cair no meio de um UTF-8 multi-byte — o `iconv -c`
+# descarta o byte incompleto. Sem iconv no host, o assunto segue cru (o esc()
+# já o deixa incapaz de abortar por sequência ilegal).
+CURRENT_SUBJECT="$(git log -1 --format=%s 2>/dev/null | head -c 120 || true)"
+if command -v iconv >/dev/null 2>&1; then
+  CURRENT_SUBJECT="$(printf '%s' "$CURRENT_SUBJECT" | iconv -f UTF-8 -t UTF-8 -c 2>/dev/null || true)"
+fi
+
 # Guardado ANTES de qualquer zeragem abaixo: "vi uma tag" e "não anunciei"
 # são coisas diferentes. Sem isto, um fork sem NENHUMA tag `v*` chega ao app
 # com a mesma combinação de uma instalação que já contém a última publicada
@@ -201,7 +214,7 @@ PIN_CORRIGIDO="$(completar_pin_ausente .env)" || PIN_CORRIGIDO=""
 # do operador e não se toca. Aqui só se avisa.
 PIN_FALTANDO="$(pin_incompleto .env)" || PIN_FALTANDO=""
 
-BODY="{\"kind\":\"heartbeat\",\"current_version\":\"${CURRENT}\",\"current_sha\":\"${CURRENT_SHA}\",\"off_release\":${OFF_RELEASE},\"latest_version\":\"${LATEST_TAG}\",\"compare_failed\":${COMPARE_FAILED},\"has_known_release\":${HAS_KNOWN_RELEASE},\"changelog\":\"$(esc "$CHANGELOG")\"}" || true
+BODY="{\"kind\":\"heartbeat\",\"current_version\":\"${CURRENT}\",\"current_sha\":\"${CURRENT_SHA}\",\"current_subject\":\"$(esc "$CURRENT_SUBJECT")\",\"off_release\":${OFF_RELEASE},\"latest_version\":\"${LATEST_TAG}\",\"compare_failed\":${COMPARE_FAILED},\"has_known_release\":${HAS_KNOWN_RELEASE},\"changelog\":\"$(esc "$CHANGELOG")\"}" || true
 
 # Só no log do host, de propósito. Mandar isto no heartbeat seria inútil: o
 # schema da rota é `z.object` sem `.strict()`, então o Zod DESCARTA chave

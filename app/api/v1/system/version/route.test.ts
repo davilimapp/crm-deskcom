@@ -162,6 +162,61 @@ describe("GET /api/v1/system/version", () => {
     expect(body.data.notes).toBeUndefined();
   });
 
+  it("quem não é dono também recebe o assunto e o off_release — o rodapé compõe com eles", async () => {
+    // O rodapé da sidebar é de TODO mundo, não só de quem pode atualizar. Sem
+    // estes dois campos aqui, a composição "assunto - SHA" só existiria para o
+    // dono, e a mesma instalação mostraria nomes diferentes para pessoas
+    // diferentes.
+    vi.mocked(loadAuthUser).mockResolvedValue(MEMBRO as never);
+    versionRow = {
+      ...versionRow,
+      current_version: "bc962e3f",
+      current_subject: "zenfy v1.1",
+      off_release: true,
+      latest_version: "",
+    };
+    const { GET } = await import("../version/route");
+    const body = await (await GET(get())).json();
+    expect(body.data.current_version).toBe("bc962e3f");
+    expect(body.data.current_subject).toBe("zenfy v1.1");
+    expect(body.data.off_release).toBe(true);
+  });
+
+  it("fora da janela pós-rollback, o assunto acompanha a versão do heartbeat — inclusive em tag", async () => {
+    vi.mocked(loadAuthUser).mockResolvedValue(OWNER as never);
+    versionRow = { ...versionRow, current_subject: "release(1.28.0): montada dos fragmentos" };
+    const { GET } = await import("../version/route");
+    const body = await (await GET(get())).json();
+    expect(body.data.current_subject).toBe("release(1.28.0): montada dos fragmentos");
+  });
+
+  it("na janela pós-rollback, o assunto é suprimido: ele nomearia o commit que quebrou", async () => {
+    // O checkout deu certo e quem não subiu foi o container: o host reportou a
+    // versão QUEBRADA e o run sabe qual voltou ao ar. Devolver o assunto do
+    // heartbeat ao lado de `from_version` seria creditar à versão que voltou o
+    // nome da que caiu.
+    vi.mocked(loadAuthUser).mockResolvedValue(OWNER as never);
+    versionRow = {
+      ...versionRow,
+      current_version: "1.1.0",
+      current_subject: "assunto do commit que quebrou",
+    };
+    runRow = {
+      id: "55555555-5555-4555-8555-555555555555",
+      status: "failed_rolled_back",
+      last_step: "banco",
+      from_version: "1.0.0",
+      to_version: "1.1.0",
+      dispatched_at: new Date(Date.now() - 120_000).toISOString(),
+      finished_at: new Date(Date.now() - 60_000).toISOString(),
+      log_tail: "",
+    };
+    const { GET } = await import("../version/route");
+    const body = await (await GET(get())).json();
+    expect(body.data.current_version).toBe("1.0.0");
+    expect(body.data.current_subject).toBe("");
+  });
+
   it("entrega o estado completo e a faixa do CHANGELOG para o dono", async () => {
     vi.mocked(loadAuthUser).mockResolvedValue(OWNER as never);
     const { GET } = await import("../version/route");

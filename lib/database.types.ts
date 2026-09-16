@@ -7079,6 +7079,7 @@ export type Database = {
           changelog_raw: string
           compare_failed: boolean
           current_sha: string
+          current_subject: string
           current_version: string
           has_known_release: boolean
           id: number
@@ -7093,6 +7094,7 @@ export type Database = {
           changelog_raw?: string
           compare_failed?: boolean
           current_sha?: string
+          current_subject?: string
           current_version?: string
           has_known_release?: boolean
           id?: number
@@ -7107,6 +7109,7 @@ export type Database = {
           changelog_raw?: string
           compare_failed?: boolean
           current_sha?: string
+          current_subject?: string
           current_version?: string
           has_known_release?: boolean
           id?: number

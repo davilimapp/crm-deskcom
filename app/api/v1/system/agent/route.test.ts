@@ -143,6 +143,30 @@ describe("POST /api/v1/system/agent", () => {
     expect(lastUpdate("system_version")).toMatchObject({ compare_failed: true });
   });
 
+  it("heartbeat grava o assunto do commit enviado pelo agente", async () => {
+    const { POST } = await import("./route");
+    const res = await POST(req({ ...HEARTBEAT, current_subject: "zenfy v1.1" }));
+    expect(res.status).toBe(200);
+    expect(lastUpdate("system_version")).toMatchObject({ current_subject: "zenfy v1.1" });
+  });
+
+  it("aceita heartbeat de agente ANTIGO, sem o campo current_subject (grava vazio)", async () => {
+    // Mesmo bootstrap das 0093/0094: o container do app atualiza antes do
+    // script do host. Se current_subject fosse obrigatório, o agente antigo
+    // levaria 422 e a instalação inteira ficaria muda — versão, changelog e
+    // pedido de atualização — por causa de um campo decorativo.
+    const { POST } = await import("./route");
+    const res = await POST(req(HEARTBEAT));
+    expect(res.status).toBe(200);
+    expect(lastUpdate("system_version")).toMatchObject({ current_subject: "" });
+  });
+
+  it("recusa assunto acima do teto (o agente corta em 120 bytes; isto é sabotagem)", async () => {
+    const { POST } = await import("./route");
+    const res = await POST(req({ ...HEARTBEAT, current_subject: "x".repeat(300) }));
+    expect(res.status).toBe(422);
+  });
+
   it("aceita heartbeat de agente ANTIGO, sem o campo compare_failed", async () => {
     // O container do app atualiza antes do script do host — é literalmente o
     // bootstrap desta feature. Se o campo novo fosse obrigatório, o agente

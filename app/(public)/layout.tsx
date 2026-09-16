@@ -71,23 +71,23 @@ export default async function PublicLayout({ children }: { children: React.React
                 "primeira <img> da página", e uma asserção de negação com seletor
                 largo passa sozinha assim que outra imagem entra na tela.
 
-                ── Moldura por tema (contraste no escuro) ───────────────────────────
+                ── Sem moldura, em NENHUM tema ──────────────────────────────────────
 
-                O chip `dark:bg-white` é o mesmo da barra lateral
-                (`components/shell/Sidebar.tsx`): esta tela também respeita
-                `data-theme` (o `ThemeProvider` embrulha a raiz inteira, login
-                incluso), então um logo escuro contra `--color-surface` escuro tem
-                o mesmo problema de contraste aqui. No tema claro nada muda.
+                Já houve aqui um chip `dark:bg-white` (PR #659) para dar contraste
+                a logos escuros contra `--color-surface` escuro. Mas ele pintava um
+                retângulo branco em volta de QUALQUER logo — inclusive arte
+                desenhada PARA fundo escuro, que ganhava uma moldura branca de
+                sobra (o caso da Zenfy). A moldura saiu: nenhum tema pinta fundo
+                atrás do logo, e o contraste da arte enviada é responsabilidade de
+                quem a envia. A cerca é `tests/unit/logo-sem-moldura-branca.test.ts`.
               */}
-              <div className="rounded-md dark:bg-white dark:px-3 dark:py-2 dark:shadow-sm">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  data-testid="logo-da-fachada"
-                  src={marca.logoUrl}
-                  alt={marca.nome}
-                  className="h-10 w-auto max-w-[12rem] object-contain"
-                />
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                data-testid="logo-da-fachada"
+                src={marca.logoUrl}
+                alt={marca.nome}
+                className="h-10 w-auto max-w-[12rem] object-contain"
+              />
             </div>
           ) : marcaEhADoProduto({ name: marca.nome, logoUrl: null }) ? (
             <div className="flex justify-center">

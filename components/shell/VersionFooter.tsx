@@ -25,6 +25,14 @@ export function VersionFooter({
   if (!data?.current_version) return null;
 
   const label = data.current_version.replace(/^v/i, "");
+  // O nome que uma pessoa lê. Fora de release, `current_version` é um SHA
+  // curto — "bc962e3f" não diz o que está rodando — e o assunto do commit
+  // (`current_subject`, enviado pelo agente do host) nomeia: "versão zenfy
+  // v1.1 - bc962e3f". Só fora de release: em tag, o número é o nome, e o
+  // assunto de um commit de release é ruído. Em tag (ou com agente antigo,
+  // que não envia o campo) a linha segue exatamente como era.
+  const visivel =
+    data.off_release && data.current_subject ? `${data.current_subject} - ${label}` : label;
   // Só acende quando existe versão nova de verdade. `off_release` sozinho não
   // conta: uma instalação de desenvolvimento sem versão publicada mais nova
   // ficava com o ponto pulsando pra sempre, e o texto "Nova versão · " com o
@@ -35,12 +43,14 @@ export function VersionFooter({
     return (
       <p
         className={cn(
-          "px-3 py-1 text-[11px] text-muted-foreground",
+          "truncate px-3 py-1 text-[11px] text-muted-foreground",
           collapsed && "px-0 text-center",
         )}
-        title={`${t("Versão")} ${label}`}
+        title={`${t("Versão")} ${visivel}`}
       >
-        {collapsed ? label.split(".").slice(0, 2).join(".") : `${t("versão")} ${label}`}
+        {/* Recolhida, só o número/SHA: o assunto cabe na barra aberta (w-60),
+            não num quadrado de 4rem — e o title carrega o inteiro. */}
+        {collapsed ? label.split(".").slice(0, 2).join(".") : `${t("versão")} ${visivel}`}
       </p>
     );
   }

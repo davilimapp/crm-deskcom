@@ -313,35 +313,30 @@ export function CampoDeLogo({
                 style={{ backgroundColor: fundo }}
               >
                 {emVigor ? (
-                  // O chip claro na aparência escura é o MESMO que a barra
-                  // lateral e a tela de entrada aplicam de verdade
+                  // A prévia desenha o logo CRU nas duas caixas — o MESMO que a
+                  // barra lateral e a tela de entrada aplicam de verdade
                   // (`components/shell/Sidebar.tsx`, `app/(public)/layout.tsx`):
-                  // esta prévia deixaria de ser prévia se mostrasse o logo cru
-                  // onde o app real desenha um chip por baixo. Aqui não dá pra
-                  // usar a variante `dark:` do Tailwind — as duas caixas
-                  // renderizam lado a lado no MESMO tema real, simulando os
-                  // dois via `style` — então a condição é o rótulo da caixa, não
-                  // o tema da página.
-                  <span
-                    className={
-                      rotulo === t("Aparência escura")
-                        ? "rounded-md bg-white px-2 py-1 shadow-sm"
-                        : undefined
-                    }
-                  >
-                    {/* <img> e não next/image pelo mesmo motivo da barra lateral e da
-                      tela de acesso: a URL é do projeto de quem hospeda, e
-                      `next/image` exige allowlist de domínios fechada em BUILD — a
-                      imagem pré-buildada do self-host recusaria o domínio do
-                      operador. Altura fixa e largura livre para não distorcer arte
-                      de proporção desconhecida. */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={emVigor}
-                      alt={nomeEmVigor}
-                      className="max-h-12 w-auto max-w-full object-contain"
-                    />
-                  </span>
+                  // nenhuma superfície do app pinta fundo atrás do logo de quem
+                  // hospeda, em tema nenhum. Já houve aqui um chip branco na caixa
+                  // da aparência escura (PR #659); saiu junto com o chip real —
+                  // se a prévia o mantivesse, deixaria de ser prévia, e o operador
+                  // aprovaria na tela de marca uma coisa e receberia outra no
+                  // produto. Aqui não dá pra usar a variante `dark:` do Tailwind —
+                  // as duas caixas renderizam lado a lado no MESMO tema real,
+                  // simulando os dois via `style` — mas com o chip removido não há
+                  // mais o que condicionar ao tema.
+                  // <img> e não next/image pelo mesmo motivo da barra lateral e da
+                  // tela de acesso: a URL é do projeto de quem hospeda, e
+                  // `next/image` exige allowlist de domínios fechada em BUILD — a
+                  // imagem pré-buildada do self-host recusaria o domínio do
+                  // operador. Altura fixa e largura livre para não distorcer arte
+                  // de proporção desconhecida.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={emVigor}
+                    alt={nomeEmVigor}
+                    className="max-h-12 w-auto max-w-full object-contain"
+                  />
                 ) : (
                   <span
                     className="text-sm font-semibold tracking-tight"
