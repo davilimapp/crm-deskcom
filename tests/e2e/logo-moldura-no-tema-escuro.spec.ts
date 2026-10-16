@@ -1,44 +1,41 @@
 /**
- * A MOLDURA CLARA DO LOGO — REMOVIDA; ESTA SPEC CERCA QUE ELA NÃO VOLTE.
+ * A MOLDURA CLARA DO LOGO NO TEMA ESCURO — QUEM A RECEBE, E QUEM NÃO RECEBE.
  *
  * ═══ O QUE ESTA SPEC MEDE, E POR QUE ELA EXISTE ═══
  *
- * O PR #659 (@felipebnt) pôs uma moldura clara por trás do logo ENVIADO por
- * quem hospeda quando o tema era escuro (`rounded-md dark:bg-white dark:px-…
- * dark:py-… dark:shadow-sm`). O motivo era real: arte escura sobre
- * `--color-surface` escuro (`#1d1c17`) simplesmente some — sem erro, sem aviso,
- * e sem nada na tela dizendo que sumiu.
+ * O PR #659 (@felipebnt) põe uma moldura clara por trás do logo ENVIADO por
+ * quem hospeda quando o tema é escuro (`rounded-md dark:bg-white dark:px-…
+ * dark:py-… dark:shadow-sm`). Sem ela, arte escura sobre `--color-surface`
+ * escuro (`#1d1c17`) simplesmente some — sem erro, sem aviso, e sem nada na
+ * tela dizendo que sumiu.
  *
- * Mas o chip era condicional ao TEMA, não à cor do logo (não dá para inspecionar
- * pixel de URL externa em server component), então ele pintava um retângulo
- * branco em volta de QUALQUER arte — inclusive a desenhada PARA fundo escuro,
- * como o logo claro da Zenfy, que ganhava uma moldura branca de sobra em toda
- * superfície do tema escuro. A decisão de 2026-09-16 reverte o #659: nenhuma
- * superfície pinta fundo atrás do logo, em tema nenhum; o contraste da arte
- * enviada é responsabilidade de quem a envia.
+ * Já existe uma cerca para isso: `tests/unit/logo-nao-some-no-tema-escuro.ts`.
+ * Ela lê a FONTE e prova que o `<img>` continua embrulhado pelo chip — e o
+ * cabeçalho dela diz, em voz alta, o que ela NÃO faz:
  *
- * Já existe uma cerca para isso: `tests/unit/logo-sem-moldura-branca.test.ts`.
- * Ela lê a FONTE e reprova qualquer `bg-white` que volte a morar nas três
- * superfícies — e o cabeçalho dela diz, em voz alta, o que ela NÃO faz:
+ *   > O que ele NÃO faz é medir contraste num navegador — isso é Playwright com
+ *   > `getComputedStyle`, e está anotado como pendência.
  *
- *   > O que ela NÃO faz é medir pixel num navegador.
- *
- * Esta spec é essa medição. Ela não relê a fonte: ela abre a tela, escolhe o
- * tema como uma pessoa escolhe, e pergunta ao NAVEGADOR o que foi pintado atrás
- * do logo.
+ * Esta spec é essa pendência. Ela não relê a fonte: ela abre a tela, escolhe o
+ * tema como uma pessoa escolhe, e pergunta ao NAVEGADOR qual cor foi pintada.
  * A diferença não é de rigor formal — uma classe `dark:` escrita no JSX e uma
  * classe `dark:` que o Tailwind de fato compilou para o seletor certo
  * (`@custom-variant dark (&:where([data-theme="dark"], …))`, `app/globals.css`)
  * são coisas diferentes, e só a segunda pinta pixel.
  *
- * ═══ O RAMO `marcaDoProduto` E O CASO (5) ═══
+ * ═══ A FRONTEIRA QUE A RECONCILIAÇÃO CRIOU ═══
  *
- * Sem logo enviado — e com o nome padrão —, a barra cai no ramo `marcaDoProduto`
- * (#642): a identidade PRÓPRIA do produto, um `<svg>` inline desenhado para os
- * dois temas. O caso (5) cerca esse ramo: nenhum ancestral da marca pode ter
- * fundo claro pintado. Com a moldura removida do ramo do logo enviado, ele
- * deixou de ser fronteira ENTRE ramos e passou a ser cerca do invariante geral
- * — e continua medindo que o ramo existe e renderiza o `<svg>`.
+ * O #659 foi escrito antes de a `main` ganhar o ramo `marcaDoProduto` (#642) —
+ * a identidade PRÓPRIA do produto, um `<svg>` inline desenhado para os dois
+ * temas. A reconciliação preservou os dois e disse a fronteira:
+ *
+ *   - logo ENVIADO por quem hospeda  → recebe a moldura (contraste desconhecido)
+ *   - arte do PRODUTO (`marcaDoProduto`) → NÃO recebe (já serve os dois temas)
+ *
+ * O caso (5) é essa fronteira, e é o que mais importa: pôr a moldura na marca do
+ * produto seria dar o remédio a quem não tem a doença — e violaria a condição
+ * com que o dono aprovou a mudança ("desde que não quebre o visual que já
+ * existe e está consolidado há meses").
  *
  * ═══ A CONDIÇÃO DO DONO É MENSURÁVEL, E O CASO (6) A MEDE ═══
  *
@@ -50,16 +47,16 @@
  *
  * ═══ AS TRÊS SUPERFÍCIES ═══
  *
- * O #659 tocou três telas, e devolver a moldura numa só devolveria o defeito
- * nas outras duas. As três são medidas aqui:
+ * O #659 toca três telas, e consertar uma só devolveria o defeito nas outras
+ * duas. As três são medidas aqui:
  *
  *   1. a barra lateral do app   (`components/shell/Sidebar.tsx`)   — casos 1,2,5,6
  *   2. a tela de entrada        (`app/(public)/layout.tsx`)        — caso 3
  *   3. a PRÉVIA da tela de marca(`components/branding/CampoDeLogo.tsx`) — caso 4
  *
- * A terceira é a que mais engana: se a prévia desenhar o que o app real não
- * desenha, ela deixa de ser prévia — o operador aprova uma coisa na tela de
- * marca e recebe outra no produto.
+ * A terceira é a que mais engana: se a prévia mostrar o logo cru onde o app real
+ * desenha a moldura, ela deixa de ser prévia — o operador aprova uma coisa na
+ * tela de marca e recebe outra no produto.
  *
  * ═══ COMO O TEMA É ESCOLHIDO (e por que de dois jeitos) ═══
  *
@@ -77,7 +74,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as zlib from "node:zlib";
 
-import { test, expect, type Page, type Locator } from "@playwright/test";
+import { test, expect, type Page, type Locator } from "./helpers/test";
 
 import { generateTotp, msUntilNextTotpWindow } from "./utils/totp";
 
@@ -134,19 +131,21 @@ function chunk(tipo: string, dados: Buffer): Buffer {
   return Buffer.concat([tamanho, corpo, crc]);
 }
 
-function pngSolido(lado: number, cor: [number, number, number]): Buffer {
+function pngSolido(lado: number, cor: [number, number, number], bordaTransparente = false): Buffer {
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(lado, 0);
   ihdr.writeUInt32BE(lado, 4);
   ihdr[8] = 8; // bit depth
-  ihdr[9] = 2; // color type: truecolor
+  ihdr[9] = 6; // truecolor + alpha: a fixture também mede transparência real.
   const linhas: Buffer[] = [];
   for (let y = 0; y < lado; y++) {
-    const linha = Buffer.alloc(1 + lado * 3);
+    const linha = Buffer.alloc(1 + lado * 4);
     for (let x = 0; x < lado; x++) {
-      linha[1 + x * 3] = cor[0];
-      linha[2 + x * 3] = cor[1];
-      linha[3 + x * 3] = cor[2];
+      linha[1 + x * 4] = cor[0];
+      linha[2 + x * 4] = cor[1];
+      linha[3 + x * 4] = cor[2];
+      linha[4 + x * 4] =
+        bordaTransparente && (x < 12 || y < 12 || x >= lado - 12 || y >= lado - 12) ? 0 : 255;
     }
     linhas.push(linha);
   }
@@ -158,8 +157,7 @@ function pngSolido(lado: number, cor: [number, number, number]): Buffer {
   ]);
 }
 
-/** Azul-marinho: a arte do relato — quase invisível contra `#1d1c17`. Segue
- * aqui de propósito: a spec cerca que nem o pior caso faz o app pintar fundo. */
+/** Azul-marinho: a arte do relato — invisível contra `#1d1c17` sem a moldura. */
 const PNG_AZUL_MARINHO = pngSolido(64, [16, 24, 64]);
 
 // ── Medição ─────────────────────────────────────────────────────────────────
@@ -172,7 +170,7 @@ interface Caixa {
 }
 
 interface Moldura {
-  /** A tag do elemento direto atrás do logo — a antiga `div` da moldura, hoje o contêiner de layout. */
+  /** A tag do elemento que embrulha o logo — `div` com a moldura, outra coisa sem. */
   readonly tagDoPai: string;
   readonly classeDoPai: string;
   /** `getComputedStyle().backgroundColor` do pai — o que o NAVEGADOR pintou. */
@@ -229,9 +227,9 @@ function canais(cor: string): { r: number; g: number; b: number; a: number } | n
 /**
  * "Fundo claro" medido, não adjetivado: opaco E com os três canais altos.
  *
- * O limiar é 200/255 porque o fundo claro que interessa aqui é o do antigo chip
- * `bg-white` puro (255) — o `--color-surface` escuro é `#1d1c17` (29,28,23) — e
- * não há nada entre os dois que este número precise arbitrar.
+ * O limiar é 200/255 porque a moldura do produto é `bg-white` puro (255) e o
+ * `--color-surface` escuro é `#1d1c17` (29,28,23) — não há nada entre os dois
+ * que este número precise arbitrar.
  */
 function fundoEClaro(cor: string): boolean {
   const c = canais(cor);
@@ -278,7 +276,7 @@ async function loginComTotp(page: Page, email: string, secret: string): Promise<
   await page.goto("/login");
   await page.locator("#email").fill(email);
   await page.locator("#password").fill(creds.password);
-  await page.getByRole("button", { name: /entrar/i }).click({ timeout: 15_000 });
+  await page.getByRole("button", { name: "Entrar", exact: true }).click({ timeout: 15_000 });
   await page.waitForURL(/\/login\/mfa/);
 
   const digito1 = page.locator('input[aria-label="Dígito 1"]');
@@ -301,9 +299,7 @@ async function loginComTotp(page: Page, email: string, secret: string): Promise<
     ]);
     if (desfecho === "entrou") return;
     if (desfecho === "sem-desfecho") {
-      throw new Error(
-        `o desafio de MFA de ${email} não terminou em 60s (url=${page.url()})`,
-      );
+      throw new Error(`o desafio de MFA de ${email} não terminou em 60s (url=${page.url()})`);
     }
     await page.waitForTimeout(msUntilNextTotpWindow() + 200);
   }
@@ -314,6 +310,7 @@ async function subir(
   page: Page,
   escopo: Escopo,
   arquivo: { nome: string; mime: string; bytes: Buffer },
+  tema: "claro" | "escuro" = "claro",
 ): Promise<void> {
   // A HIDRATAÇÃO, e não a visibilidade: o input existe no HTML do SSR antes de o
   // React atar o `onChange`, e arquivo posto nessa janela não dispara requisição
@@ -322,22 +319,33 @@ async function subir(
     page.locator(`[data-campo-de-logo='${escopo}'][data-hidratado]`),
     `o campo de logo da camada "${escopo}" não hidratou`,
   ).toBeVisible({ timeout: 15_000 });
-  await page.locator(`#logo-${escopo}`).setInputFiles({
+  const entrada = tema === "escuro" ? `#logo-escuro-${escopo}` : `#logo-${escopo}`;
+  const resposta = page.waitForResponse(
+    (r) => r.url().includes("/api/v1/marca/logo") && r.request().method() === "POST",
+  );
+  await page.locator(entrada).setInputFiles({
     name: arquivo.nome,
     mimeType: arquivo.mime,
     buffer: arquivo.bytes,
   });
-  await expect(page.getByText(/logo atualizado/i)).toBeVisible({ timeout: 15_000 });
+  expect((await resposta).ok()).toBe(true);
+  await expect(page.getByText(/logo atualizado/i).last()).toBeVisible({ timeout: 15_000 });
 }
 
 async function removerLogoSeHouver(page: Page, tela: string, escopo: Escopo): Promise<void> {
   await page.goto(tela);
-  const remover = page
-    .locator(`[data-campo-de-logo='${escopo}']`)
-    .getByRole("button", { name: /^remover$/i });
-  if ((await remover.count()) === 0) return;
-  await remover.click();
-  await expect(page.getByText(/logo removido/i)).toBeVisible({ timeout: 15_000 });
+  const campo = page.locator(`[data-campo-de-logo='${escopo}'][data-hidratado]`);
+  await expect(campo).toBeVisible();
+  for (const nome of [/^remover logo escuro$/i, /^remover$/i]) {
+    const remover = campo.getByRole("button", { name: nome });
+    if ((await remover.count()) === 0) continue;
+    const resposta = page.waitForResponse(
+      (r) => r.url().includes("/api/v1/marca/logo") && r.request().method() === "DELETE",
+    );
+    await remover.click();
+    expect((await resposta).ok()).toBe(true);
+    await expect(remover).toHaveCount(0);
+  }
 }
 
 function evidencia(nome: string): string {
@@ -379,7 +387,7 @@ test.describe("a moldura do logo no tema escuro", () => {
     return s!;
   };
 
-  test("(1) tema ESCURO + logo ENVIADO: a barra lateral NÃO pinta fundo atrás do logo", async ({
+  test("(1) tema ESCURO + logo ENVIADO: a barra lateral pinta a moldura clara", async ({
     page,
   }) => {
     await loginComTotp(page, creds.users.dono!.email, secret());
@@ -400,19 +408,27 @@ test.describe("a moldura do logo no tema escuro", () => {
     anotar("1-barra-escuro.json", m);
     await page.screenshot({ path: evidencia("1-barra-escuro.png") });
 
-    // A arte azul-marinho é o pior caso do #659 — quase invisível contra o
-    // fundo escuro. Ela continua aqui DE PROPÓSITO: a asserção é que nem por
-    // isso o app pinta fundo atrás dela. O contraste da arte enviada é
-    // responsabilidade de quem a envia; a medição é cega à cor do logo.
     expect(
-      fundoETransparente(m.fundo),
-      `o pai do <img> pintou fundo no tema escuro (background-color=${m.fundo}, ` +
-        `tag=${m.tagDoPai}, classe="${m.classeDoPai}") — a moldura do #659 voltou`,
+      fundoEClaro(m.fundo),
+      `a moldura não foi pintada: o pai do <img> tem background-color=${m.fundo} ` +
+        `(tag=${m.tagDoPai}, classe="${m.classeDoPai}")`,
     ).toBe(true);
-    expect(m.sombra, "o pai do <img> ganhou sombra no tema escuro").toBe("none");
+    expect(
+      m.padding.every((p) => p > 0),
+      `a moldura não tem folga: padding=${m.padding}`,
+    ).toBe(true);
+    expect(m.sombra, "a moldura não tem sombra").not.toBe("none");
+
+    // CONTENÇÃO, não proximidade: a moldura tem de ser MAIOR que o logo nos dois
+    // eixos e contê-lo. Uma moldura irmã (a sabotagem que derrubou a primeira
+    // versão da cerca unitária) teria fundo claro e não conteria nada.
+    expect(m.caixaDoPai.largura).toBeGreaterThan(m.caixaDoLogo.largura);
+    expect(m.caixaDoPai.altura).toBeGreaterThan(m.caixaDoLogo.altura);
+    expect(m.caixaDoPai.x).toBeLessThanOrEqual(m.caixaDoLogo.x);
+    expect(m.caixaDoPai.y).toBeLessThanOrEqual(m.caixaDoLogo.y);
   });
 
-  test("(2) tema CLARO + logo ENVIADO: não há fundo pintado atrás do logo", async ({
+  test("(2) tema CLARO + logo ENVIADO: NÃO há moldura — as classes são `dark:`", async ({
     page,
   }) => {
     await loginComTotp(page, creds.users.dono!.email, secret());
@@ -426,9 +442,10 @@ test.describe("a moldura do logo no tema escuro", () => {
 
     expect(
       fundoETransparente(m.fundo),
-      `no tema claro o logo ganhou fundo pintado (${m.fundo})`,
+      `no tema claro o logo ganhou fundo pintado (${m.fundo}) — as classes deveriam ser só \`dark:\``,
     ).toBe(true);
-    expect(m.sombra, "no tema claro o pai do <img> tem sombra").toBe("none");
+    expect(m.padding, "no tema claro a moldura não pode ter folga").toEqual([0, 0, 0, 0]);
+    expect(m.sombra, "no tema claro a moldura não pode ter sombra").toBe("none");
   });
 
   test("(3) a TELA DE ENTRADA repete as duas medidas, sem sessão nenhuma", async ({ browser }) => {
@@ -439,10 +456,7 @@ test.describe("a moldura do logo no tema escuro", () => {
       const contexto = await browser.newContext();
       try {
         const pagina = await contexto.newPage();
-        await pagina.addInitScript(
-          (t) => window.localStorage.setItem("deskcomm-theme", t),
-          tema,
-        );
+        await pagina.addInitScript((t) => window.localStorage.setItem("deskcomm-theme", t), tema);
         await pagina.goto("/login");
         expect(await temaDaPagina(pagina), `a fachada não ficou em ${tema}`).toBe(tema);
 
@@ -452,16 +466,22 @@ test.describe("a moldura do logo no tema escuro", () => {
 
         if (tema === "dark") {
           expect(
-            fundoETransparente(m.fundo),
-            `a fachada no escuro pintou fundo atrás do logo (fundo=${m.fundo}) — a ` +
-              `moldura do #659 voltou na tela de primeira impressão`,
+            fundoEClaro(m.fundo),
+            `a fachada no escuro desenhou o logo CRU (fundo=${m.fundo}) — o defeito ` +
+              `volta inteiro na tela de primeira impressão`,
           ).toBe(true);
-          expect(m.sombra, "a fachada no escuro tem sombra atrás do logo").toBe("none");
+          expect(
+            m.padding.every((p) => p > 0),
+            `fachada escura sem folga: ${m.padding}`,
+          ).toBe(true);
+          expect(m.caixaDoPai.largura).toBeGreaterThan(m.caixaDoLogo.largura);
+          expect(m.caixaDoPai.altura).toBeGreaterThan(m.caixaDoLogo.altura);
         } else {
           expect(
             fundoETransparente(m.fundo),
-            `a fachada no claro ganhou fundo pintado (${m.fundo})`,
+            `a fachada no claro ganhou moldura (${m.fundo})`,
           ).toBe(true);
+          expect(m.padding).toEqual([0, 0, 0, 0]);
         }
       } finally {
         await contexto.close();
@@ -474,42 +494,24 @@ test.describe("a moldura do logo no tema escuro", () => {
     await page.goto("/admin/marca");
 
     // As duas caixas convivem no MESMO tema real (o fundo é simulado por
-    // `style`), e é justamente por isso que a prévia pode divergir do app sem
-    // nada gritar. A asserção é ESTRUTURAL: entre o <img> e a caixa da prévia
-    // não pode existir elemento nenhum — um chip ressuscitado ali apareceria
-    // como um elemento a mais nessa cadeia, pintando ou não. E na caixa escura,
-    // o fundo atrás do logo é a própria superfície simulada, nunca um claro.
-    for (const aparencia of ["escuro", "claro"] as const) {
-      const logo = page.locator(`[data-previa-do-logo='${aparencia}'] img`);
-      await expect(logo).toBeVisible({ timeout: 15_000 });
-      const medida = await logo.evaluate((el) => {
-        const pai = el.parentElement as HTMLElement;
-        const caixa = pai.closest("[data-previa-do-logo]") as HTMLElement | null;
-        const cs = getComputedStyle(pai);
-        return {
-          paiEhAPropriaCaixa: pai === caixa,
-          tagDoPai: pai.tagName.toLowerCase(),
-          classeDoPai: typeof pai.className === "string" ? pai.className : "",
-          fundo: cs.backgroundColor,
-        };
-      });
-      anotar(`4-previa-${aparencia}.json`, medida);
-
-      expect(
-        medida.paiEhAPropriaCaixa,
-        `a prévia da aparência ${aparencia} tem um elemento entre o logo e a caixa ` +
-          `(tag=${medida.tagDoPai}, classe="${medida.classeDoPai}") — ela desenharia ` +
-          `moldura que o app não desenha, e o operador aprovaria uma coisa e ` +
-          `receberia outra`,
-      ).toBe(true);
-      if (aparencia === "escuro") {
-        expect(
-          fundoEClaro(medida.fundo),
-          `a caixa escura da prévia pintou fundo claro atrás do logo (${medida.fundo})`,
-        ).toBe(false);
-      }
-    }
+    // `style`), então a condição lá é o rótulo da caixa — e é justamente por isso
+    // que a prévia pode divergir do app sem nada gritar.
+    const escura = await medirMoldura(page.locator("[data-previa-do-logo='escuro'] img"));
+    const clara = await medirMoldura(page.locator("[data-previa-do-logo='claro'] img"));
+    anotar("4-previa-escura.json", escura);
+    anotar("4-previa-clara.json", clara);
     await page.screenshot({ path: evidencia("4-previa.png"), fullPage: true });
+
+    expect(
+      fundoEClaro(escura.fundo),
+      `a prévia da aparência ESCURA mostra o logo cru (fundo=${escura.fundo}) — ela deixa ` +
+        `de prever o que o app desenha, e o operador aprova uma coisa e recebe outra`,
+    ).toBe(true);
+    expect(escura.padding.every((p) => p > 0)).toBe(true);
+    expect(
+      fundoETransparente(clara.fundo),
+      `a prévia da aparência CLARA ganhou moldura (${clara.fundo}) — o app não desenha isso`,
+    ).toBe(true);
   });
 
   test("(5) A FRONTEIRA: no escuro, a marca do PRODUTO não recebe moldura", async ({ page }) => {
@@ -591,6 +593,74 @@ test.describe("a moldura do logo no tema escuro", () => {
     // se os DOIS tivessem mudado junto.
     expect(escuro.altura, "o cabeçalho deixou de ser `h-14` (56px)").toBe(56);
     expect(escuro.y, "o cabeçalho saiu do topo da barra").toBe(0);
+  });
+
+  test("(7) dois logos: troca real de tema, fachada e remoção independente", async ({
+    page,
+    browser,
+  }) => {
+    await loginComTotp(page, creds.users.dono!.email, secret());
+    await removerLogoSeHouver(page, "/app/settings/marca", "organizacao");
+    await removerLogoSeHouver(page, "/admin/marca", "instalacao");
+    const clara = { nome: "logo-claro.png", mime: "image/png", bytes: PNG_AZUL_MARINHO };
+    const escura = {
+      nome: "logo-escuro.png",
+      mime: "image/png",
+      bytes: pngSolido(64, [255, 255, 255], true),
+    };
+    await subir(page, "instalacao", clara);
+    await subir(page, "instalacao", escura, "escuro");
+    const previaClara = page.locator("[data-previa-do-logo='claro'] img");
+    const previaEscura = page.locator("[data-previa-do-logo='escuro'] img");
+    await expect(previaEscura).toBeVisible();
+    const urlClara = await previaClara.getAttribute("src");
+    const urlEscura = await previaEscura.getAttribute("src");
+    expect(urlEscura).toBeTruthy();
+    expect(urlEscura).not.toBe(urlClara);
+    expect(fundoETransparente((await medirMoldura(previaEscura)).fundo)).toBe(true);
+    await page.screenshot({ path: evidencia("7-duas-artes-previa.png"), fullPage: true });
+
+    await page.goto("/app/inbox");
+    for (const tema of ["dark", "light"] as const) {
+      await escolherTemaPelaTela(page, tema);
+      const logo = page.locator("aside img:visible").first();
+      await expect(logo).toHaveAttribute("src", (tema === "dark" ? urlEscura : urlClara)!);
+      expect(fundoETransparente((await medirMoldura(logo)).fundo)).toBe(true);
+      await page.screenshot({ path: evidencia(`7-barra-${tema}.png`) });
+      const contexto = await browser.newContext();
+      try {
+        const fachada = await contexto.newPage();
+        await fachada.addInitScript((t) => localStorage.setItem("deskcomm-theme", t), tema);
+        await fachada.goto("/login");
+        const logoPublico = fachada.getByTestId(
+          tema === "dark" ? "logo-escuro-da-fachada" : "logo-da-fachada",
+        );
+        await expect(logoPublico).toHaveAttribute("src", (tema === "dark" ? urlEscura : urlClara)!);
+        expect(fundoETransparente((await medirMoldura(logoPublico)).fundo)).toBe(true);
+        await fachada.screenshot({ path: evidencia(`7-login-${tema}.png`) });
+      } finally {
+        await contexto.close();
+      }
+    }
+    // Remover só o segundo arquivo deve recuperar o chip anterior sem apagar o primeiro.
+    await page.goto("/admin/marca");
+    const resposta = page.waitForResponse(
+      (r) => r.url().includes("tema=escuro") && r.request().method() === "DELETE",
+    );
+    await page.getByRole("button", { name: "Remover logo escuro", exact: true }).click();
+    expect((await resposta).ok()).toBe(true);
+    await expect(page.locator("[data-previa-do-logo='escuro'] img")).toHaveAttribute(
+      "src",
+      urlClara!,
+    );
+    expect(
+      fundoEClaro((await medirMoldura(page.locator("[data-previa-do-logo='escuro'] img"))).fundo),
+    ).toBe(true);
+    await page.reload();
+    await expect(page.locator("[data-previa-do-logo='claro'] img")).toHaveAttribute(
+      "src",
+      urlClara!,
+    );
   });
 
   /**

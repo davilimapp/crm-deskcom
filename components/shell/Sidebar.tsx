@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { toggleSidebar } from "@/app/actions/shell/toggleSidebar";
 import { useAuth } from "@/hooks/auth/AuthProvider";
 import { ConnectionHealthDot } from "@/components/connections/ConnectionHealthDot";
+import { ContadorDeCasos } from "@/components/shell/ContadorDeCasos";
+import { ContadorDaFila } from "@/components/shell/ContadorDaFila";
 import { VersionFooter } from "@/components/shell/VersionFooter";
 import { LogotipoDoProduto, SimboloDoProduto } from "@/components/branding/MarcaDoProduto";
 import { marcaEhADoProduto } from "@/lib/branding";
@@ -45,6 +47,8 @@ export function SidebarContent({
     user.is_platform_admin && !user.support,
     activeOrg?.role ?? null,
     activeOrg?.interface_settings,
+    activeOrg?.modulos_ligados ?? [],
+    activeOrg?.capacidades_ligadas ?? [],
   );
   // Configurações sai da área que rola e vai para o rodapé fixo: medido em
   // 1280x768, ele caía fora da dobra mesmo em telas de 1080px.
@@ -111,6 +115,12 @@ export function SidebarContent({
    * descer para ele — que é o contrário do que a precedência por campo promete.
    */
   const logo = activeOrg?.marca?.logoUrl || brand.logoUrl;
+  const logoEscuro =
+    activeOrg?.marca?.logoDarkUrl !== undefined
+      ? activeOrg.marca.logoDarkUrl
+      : activeOrg?.marca?.logoUrl
+        ? null
+        : brand.logoDarkUrl;
   // Só quando NINGUÉM — nem a instalação, nem a organização — pôs marca própria:
   // é a condição de `lib/branding.ts`, avaliada sobre o que a barra vai mostrar.
   const marcaDoProduto = marcaEhADoProduto({ name: nome, logoUrl: logo ?? null });
@@ -123,24 +133,41 @@ export function SidebarContent({
           collapsed ? "justify-center" : "justify-start",
         )}
       >
-        {logo && !collapsed ? (
-          // O logo de quem hospeda é desenhado CRU, nos dois temas, sem moldura
-          // nenhuma. Já houve aqui um chip `dark:bg-white` (PR #659) para dar
-          // contraste a logos escuros contra `--color-surface` escuro (`#1d1c17`),
-          // mas ele pintava um retângulo branco em volta de QUALQUER logo —
-          // inclusive arte desenhada PARA fundo escuro, que ganhava uma moldura
-          // branca de sobra (o caso da Zenfy). Não dá para inspecionar pixel de
-          // URL externa em server component, e a troca aceita agora é o inverso
-          // da anterior: o contraste da arte enviada é responsabilidade de quem
-          // envia, e nenhuma superfície pinta fundo atrás dela. A cerca é
-          // `tests/unit/logo-sem-moldura-branca.test.ts`.
-          // <img> em vez de next/image de propósito: a URL vem de quem hospeda
-          // (banco ou .env), e next/image exige allowlist de domínios fechada em
-          // build — a imagem pré-buildada rejeitaria o domínio do self-hoster.
-          // Altura fixa e largura livre porque a arte enviada tem proporção
-          // desconhecida; forçar as duas distorceria o logo de quem configurou.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={logo} alt={nome} className="h-7 w-auto max-w-[10rem] object-contain" />
+        {(logo || logoEscuro) && !collapsed ? (
+          // Sem arte própria para o escuro, preserva a proteção de contraste.
+          <div
+            className={cn(
+              "rounded-md",
+              !logoEscuro && "dark:bg-white dark:px-2 dark:py-1 dark:shadow-sm",
+            )}
+          >
+            {/* <img> em vez de next/image de propósito: a URL vem de quem hospeda
+              (banco ou .env), e next/image exige allowlist de domínios fechada em
+              build — a imagem pré-buildada rejeitaria o domínio do self-hoster.
+              Altura fixa e largura livre porque a arte enviada tem proporção
+              desconhecida; forçar as duas distorceria o logo de quem configurou. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {logo ? (
+              <img
+                src={logo}
+                alt={nome}
+                className={cn(
+                  "h-7 w-auto max-w-[10rem] object-contain",
+                  logoEscuro && "dark:hidden",
+                )}
+              />
+            ) : (
+              <span className="dark:hidden">{nome}</span>
+            )}
+            {logoEscuro ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logoEscuro}
+                alt={nome}
+                className="hidden h-7 w-auto max-w-[10rem] object-contain dark:block"
+              />
+            ) : null}
+          </div>
         ) : marcaDoProduto ? (
           // O desenho do produto, inline (ver `components/branding/MarcaDoProduto.tsx`):
           // logotipo com a barra aberta, só o símbolo com ela recolhida.
@@ -149,20 +176,17 @@ export function SidebarContent({
           ) : (
             <LogotipoDoProduto nome={nome} className="h-8 w-auto" />
           )
-        ) : collapsed ? (
-          // Recolhido sem marca do produto: o logo minimalista da instalação
-          // (quando existe arquivo em public/), senão a inicial do nome.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src="/logo-minimalista.png"
-            alt={nome}
-            className="h-8 w-8 object-contain"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display = "none";
-            }}
-          />
         ) : (
-          <span className={cn("font-semibold tracking-tight")}>{nome}</span>
+          <span className={cn("font-semibold tracking-tight", collapsed && "sr-only")}>{nome}</span>
+        )}
+        {collapsed && !marcaDoProduto && (
+          <span aria-hidden className="text-lg font-bold text-primary">
+            {/* Spread e não `[0]`: nome começando com emoji ou acento composto
+                quebraria no meio do code point. Mesma regra de `resolveBranding`
+                — a inicial precisa acompanhar o nome que a barra mostra, senão
+                recolher o menu troca a marca. */}
+            {[...nome][0]?.toUpperCase() ?? brand.initial}
+          </span>
         )}
       </div>
       {/*
@@ -274,6 +298,8 @@ export function SidebarContent({
                               className={cn(collapsed ? "absolute top-1.5 right-1.5" : "ml-auto")}
                             />
                           )}
+                          {item.contador === "casos" && <ContadorDeCasos compacto={collapsed} />}
+                          {item.contador === "fila" && <ContadorDaFila compacto={collapsed} />}
                         </Link>
                       </li>
                     );

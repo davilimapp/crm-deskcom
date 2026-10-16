@@ -16,6 +16,7 @@ import {
   crmListConversations,
   crmGetConversation,
   crmGetConversationHistory,
+  crmCreateConversationDraft,
 } from "./conversations";
 import {
   crmListLeads,
@@ -23,8 +24,9 @@ import {
   crmCreateLead,
   crmUpdateLead,
   crmMoveLeadStage,
+  crmRetomarLead,
 } from "./leads";
-import { crmListPipelines } from "./pipelines";
+import { crmGetPipelineForecast, crmListPipelines } from "./pipelines";
 import { crmSendWhatsappMessage } from "./messages";
 import { crmStartConversationAndSend } from "./start-conversation";
 import {
@@ -49,6 +51,8 @@ import {
   crmSaveOrgMemory,
 } from "./evolucao";
 import { crmListContactOrders, crmSearchProducts } from "./comercio";
+import { crmGetHonorariosContrato, crmListHonorariosParcelas } from "./honorarios";
+import { crmDescribeExternalData, crmQueryExternalData } from "./dados-externos";
 import { crmListPrivacyRequests } from "./privacidade";
 import {
   crmArchiveStage,
@@ -71,6 +75,7 @@ import {
   crmBookAppointment,
   crmCancelAppointment,
   crmConfirmAppointment,
+  crmFindAndBookAppointment,
   crmFindFreeSlots,
   crmListAppointments,
   crmListEventTypes,
@@ -79,12 +84,14 @@ import {
 } from "./agendamento";
 import {
   crmScheduleFollowup,
+  crmEnrollFollowupFlow,
   crmCancelFollowup,
   crmListFollowups,
   crmListAtRiskLeads,
   crmCloseDemand,
   crmProposeReactivation,
 } from "./retencao";
+import { crmDraftProposal, crmPrepararProposta } from "./propostas";
 
 // Cast via `unknown` porque McpToolDefinition<TInput> nao e covariante
 // em TInput (handler usa TInput em posicao contravariante). Coletar
@@ -106,6 +113,7 @@ export const allTools: ReadonlyArray<McpToolDefinition> = [
   crmListLeads,
   crmGetLead,
   crmListPipelines,
+  crmGetPipelineForecast,
   crmSearchKnowledge,
   crmListKnowledgeSources,
   crmListImprovementProposals,
@@ -113,6 +121,11 @@ export const allTools: ReadonlyArray<McpToolDefinition> = [
   crmSaveOrgMemory,
   crmListContactOrders,
   crmSearchProducts,
+  crmGetHonorariosContrato,
+  crmListHonorariosParcelas,
+  crmPrepararProposta,
+  crmDescribeExternalData,
+  crmQueryExternalData,
   crmListPrivacyRequests,
   // read — organizar a operação (W4)
   crmListStages,
@@ -130,6 +143,9 @@ export const allTools: ReadonlyArray<McpToolDefinition> = [
   crmListHumanCases,
   crmGetHumanCase,
   // write
+  // A que consulta E marca numa chamada só vem primeiro: quando o cliente já deu
+  // dia e hora, é o caminho curto, e é o que evita o turno morrer no meio (#831).
+  crmFindAndBookAppointment,
   crmBookAppointment,
   crmRescheduleAppointment,
   crmCancelAppointment,
@@ -138,8 +154,10 @@ export const allTools: ReadonlyArray<McpToolDefinition> = [
   crmCreateLead,
   crmUpdateLead,
   crmMoveLeadStage,
+  crmRetomarLead,
   crmSendWhatsappMessage,
   crmStartConversationAndSend,
+  crmCreateConversationDraft,
   crmAssignConversation,
   crmManageTags,
   // write — organizar a operação (W4)
@@ -150,12 +168,14 @@ export const allTools: ReadonlyArray<McpToolDefinition> = [
   crmSetWebhookSourceActive,
   crmSetAutomationRuleActive,
   crmScheduleFollowup,
+  crmEnrollFollowupFlow,
   crmCancelFollowup,
   crmCloseDemand,
   crmProposeReactivation,
   crmAddCaseNote,
   crmCloseHumanCase,
   crmResumeAiAttendance,
+  crmDraftProposal,
   // handoff (special)
   crmRequestHumanHandoff,
 ] as unknown as ReadonlyArray<McpToolDefinition>;
